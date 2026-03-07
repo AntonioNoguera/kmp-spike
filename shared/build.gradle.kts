@@ -87,7 +87,7 @@ publishing {
     repositories {
         maven {
             name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/AntonioNoguera/kmp-shared")
+            url = uri("https://maven.pkg.github.com/AntonioNoguera/kmp-spike")
             credentials {
                 username = System.getenv("GITHUB_ACTOR") ?: ""
                 password = System.getenv("PUBLISH_TOKEN") ?: ""

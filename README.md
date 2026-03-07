@@ -23,7 +23,7 @@ En Xcode: **File > Add Package Dependencies**
 
 URL del repositorio:
 ```
-https://github.com/AntonioNoguera/kmp-shared
+https://github.com/AntonioNoguera/kmp-spike
 ```
 
 Seleccionar la versión deseada.
@@ -58,7 +58,7 @@ En `settings.gradle.kts`:
 dependencyResolutionManagement {
     repositories {
         maven {
-            url = uri("https://maven.pkg.github.com/AntonioNoguera/kmp-shared")
+            url = uri("https://maven.pkg.github.com/AntonioNoguera/kmp-spike")
             credentials {
                 username = providers.gradleProperty("gpr.user").orNull
                     ?: System.getenv("GITHUB_ACTOR")
@@ -76,7 +76,7 @@ En `build.gradle.kts` del módulo:
 
 ```kotlin
 dependencies {
-    implementation("com.github.AntonioNoguera:kmp-shared:1.0.0")
+    implementation("com.github.AntonioNoguera:kmp-spike:1.0.0")
 }
 ```
 
