@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.github.AntonioNoguera"
-version = "1.0.0"
+version = System.getenv("VERSION") ?: "1.0.0-SNAPSHOT"
 
 kotlin {
     androidTarget {
@@ -77,15 +77,6 @@ android {
 }
 
 publishing {
-    publications {
-        // Solo configurar Android release para Maven
-        matching { it.name == "androidRelease" }.all {
-            val mavenPublication = this as MavenPublication
-            mavenPublication.groupId = "com.github.AntonioNoguera"
-            mavenPublication.artifactId = "kmp-spike"
-        }
-    }
-
     repositories {
         maven {
             name = "GitHubPackages"
@@ -98,10 +89,26 @@ publishing {
     }
 }
 
-// Solo publicar Android a GitHub Packages
-tasks.matching { it.name.startsWith("publishIos") && it.name.endsWith("ToGitHubPackagesRepository") }.configureEach {
-    enabled = false
-}
-tasks.matching { it.name == "publishKotlinMultiplatformPublicationToGitHubPackagesRepository" }.configureEach {
-    enabled = false
+afterEvaluate {
+    publishing {
+        publications {
+            // Configurar artifactId para Android
+            named<MavenPublication>("androidRelease") {
+                groupId = "com.github.AntonioNoguera"
+                artifactId = "kmp-spike"
+            }
+        }
+    }
+
+    // Deshabilitar publicaciones iOS y KMP metadata a GitHub Packages
+    tasks.matching {
+        it.name.startsWith("publishIos") && it.name.endsWith("ToGitHubPackagesRepository")
+    }.configureEach {
+        enabled = false
+    }
+    tasks.matching {
+        it.name == "publishKotlinMultiplatformPublicationToGitHubPackagesRepository"
+    }.configureEach {
+        enabled = false
+    }
 }
