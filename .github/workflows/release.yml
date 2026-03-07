@@ -1,0 +1,189 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  XCFRAMEWORK_NAME: KMPShared
+  XCFRAMEWORK_PATH: shared/build/XCFrameworks/release
+
+jobs:
+  release:
+    runs-on: macos-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      # ========================================
+      # SETUP
+      # ========================================
+      - name: "[Setup] Checkout"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "[Setup] Print environment info"
+        run: |
+          echo "=== TAG INFO ==="
+          echo "Tag: ${GITHUB_REF#refs/tags/}"
+          echo "Repository: ${{ github.repository }}"
+          echo ""
+          echo "=== SYSTEM INFO ==="
+          sw_vers
+          echo ""
+          echo "=== JAVA VERSION ==="
+          java -version 2>&1 || echo "Java not found yet"
+
+      - name: "[Setup] JDK 17"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: "[Setup] Verify JDK"
+        run: |
+          echo "JAVA_HOME: $JAVA_HOME"
+          java -version
+
+      - name: "[Setup] Gradle"
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: "[Setup] Verify Gradle wrapper"
+        run: |
+          echo "=== GRADLE WRAPPER ==="
+          ls -la gradlew
+          ./gradlew --version
+
+      # ========================================
+      # BUILD & TEST
+      # ========================================
+      - name: "[Test] Run all tests"
+        run: |
+          echo "=== RUNNING TESTS ==="
+          ./gradlew :shared:allTests --no-daemon --stacktrace
+
+      - name: "[Test] Upload test results on failure"
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: shared/build/reports/tests/
+
+      # ========================================
+      # XCFRAMEWORK
+      # ========================================
+      - name: "[XCFramework] Build"
+        run: |
+          echo "=== BUILDING XCFRAMEWORK ==="
+          ./gradlew :shared:assembleKMPSharedReleaseXCFramework --no-daemon --stacktrace
+
+      - name: "[XCFramework] Verify output exists"
+        run: |
+          echo "=== VERIFYING XCFRAMEWORK ==="
+          if [ ! -d "${{ env.XCFRAMEWORK_PATH }}/${{ env.XCFRAMEWORK_NAME }}.xcframework" ]; then
+            echo "ERROR: XCFramework not found at ${{ env.XCFRAMEWORK_PATH }}/${{ env.XCFRAMEWORK_NAME }}.xcframework"
+            ls -la ${{ env.XCFRAMEWORK_PATH }}/ || echo "Directory does not exist"
+            exit 1
+          fi
+          echo "XCFramework found:"
+          ls -la ${{ env.XCFRAMEWORK_PATH }}/
+
+      - name: "[XCFramework] Create ZIP"
+        id: zip
+        run: |
+          echo "=== CREATING ZIP ==="
+          cd ${{ env.XCFRAMEWORK_PATH }}
+          zip -r ${{ env.XCFRAMEWORK_NAME }}.xcframework.zip ${{ env.XCFRAMEWORK_NAME }}.xcframework
+
+          echo "=== ZIP CREATED ==="
+          ls -lh ${{ env.XCFRAMEWORK_NAME }}.xcframework.zip
+
+      - name: "[XCFramework] Calculate checksum"
+        id: checksum
+        run: |
+          echo "=== CALCULATING CHECKSUM ==="
+          cd ${{ env.XCFRAMEWORK_PATH }}
+          CHECKSUM=$(shasum -a 256 ${{ env.XCFRAMEWORK_NAME }}.xcframework.zip | awk '{print $1}')
+          echo "Checksum: $CHECKSUM"
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+
+      # ========================================
+      # UPDATE PACKAGE.SWIFT
+      # ========================================
+      - name: "[Package.swift] Show current content"
+        run: |
+          echo "=== CURRENT PACKAGE.SWIFT ==="
+          cat shared/Package.swift
+
+      - name: "[Package.swift] Update URL and checksum"
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          echo "=== UPDATING FOR TAG: $TAG ==="
+          echo "New checksum: ${{ steps.checksum.outputs.checksum }}"
+
+          # Update URL
+          sed -i '' "s|url: \".*${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|url: \"https://github.com/${{ github.repository }}/releases/download/$TAG/${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|" shared/Package.swift
+
+          # Update checksum
+          sed -i '' "s|checksum: \".*\"|checksum: \"${{ steps.checksum.outputs.checksum }}\"|" shared/Package.swift
+
+      - name: "[Package.swift] Show updated content"
+        run: |
+          echo "=== UPDATED PACKAGE.SWIFT ==="
+          cat shared/Package.swift
+
+      - name: "[Package.swift] Commit changes"
+        run: |
+          echo "=== COMMITTING PACKAGE.SWIFT ==="
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git diff shared/Package.swift
+
+          git add shared/Package.swift
+          git commit -m "Update Package.swift for release ${GITHUB_REF#refs/tags/}" || echo "WARN: No changes to commit"
+          git push origin HEAD:main || echo "WARN: Could not push to main (maybe protected branch?)"
+
+      # ========================================
+      # PUBLISH MAVEN
+      # ========================================
+      - name: "[Maven] Publish to GitHub Packages"
+        run: |
+          echo "=== PUBLISHING TO GITHUB PACKAGES ==="
+          echo "Actor: ${{ github.actor }}"
+          ./gradlew publish --no-daemon --stacktrace
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          PUBLISH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # ========================================
+      # GITHUB RELEASE
+      # ========================================
+      - name: "[Release] Verify ZIP exists before release"
+        run: |
+          echo "=== VERIFYING ZIP FOR RELEASE ==="
+          ls -lh ${{ env.XCFRAMEWORK_PATH }}/${{ env.XCFRAMEWORK_NAME }}.xcframework.zip
+
+      - name: "[Release] Create GitHub Release"
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ env.XCFRAMEWORK_PATH }}/${{ env.XCFRAMEWORK_NAME }}.xcframework.zip
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "[Release] Done"
+        run: |
+          echo "=========================================="
+          echo "RELEASE COMPLETED SUCCESSFULLY"
+          echo "=========================================="
+          echo "Tag: ${GITHUB_REF#refs/tags/}"
+          echo "XCFramework checksum: ${{ steps.checksum.outputs.checksum }}"
+          echo ""
+          echo "iOS (SPM): Add package from https://github.com/${{ github.repository }}"
+          echo "Android: implementation(\"com.github.AntonioNoguera:kmp-shared:${GITHUB_REF#refs/tags/v}\")"

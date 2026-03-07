@@ -1,0 +1,24 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Kotlin metadata cache
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Local properties (SDK path, secrets)
+local.properties
+
+# Kotlin
+*.class
+*.log
+*.tmp
+
+# XCFramework builds (generated)
+shared/build/
+shared/.build/
