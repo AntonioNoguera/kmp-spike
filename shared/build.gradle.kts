@@ -78,9 +78,11 @@ android {
 
 publishing {
     publications {
-        withType<MavenPublication> {
-            groupId = "com.github.AntonioNoguera"
-            artifactId = "kmp-shared"
+        // Solo configurar Android release para Maven
+        matching { it.name == "androidRelease" }.all {
+            val mavenPublication = this as MavenPublication
+            mavenPublication.groupId = "com.github.AntonioNoguera"
+            mavenPublication.artifactId = "kmp-spike"
         }
     }
 
@@ -94,4 +96,12 @@ publishing {
             }
         }
     }
+}
+
+// Solo publicar Android a GitHub Packages
+tasks.matching { it.name.startsWith("publishIos") && it.name.endsWith("ToGitHubPackagesRepository") }.configureEach {
+    enabled = false
+}
+tasks.matching { it.name == "publishKotlinMultiplatformPublicationToGitHubPackagesRepository" }.configureEach {
+    enabled = false
 }

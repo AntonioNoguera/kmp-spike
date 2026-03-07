@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "kmp-shared"
+rootProject.name = "kmp-spike"
 include(":shared")
