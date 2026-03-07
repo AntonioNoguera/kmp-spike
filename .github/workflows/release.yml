@@ -186,4 +186,4 @@ jobs:
           echo "XCFramework checksum: ${{ steps.checksum.outputs.checksum }}"
           echo ""
           echo "iOS (SPM): Add package from https://github.com/${{ github.repository }}"
-          echo "Android: implementation(\"com.github.AntonioNoguera:kmp-shared:${GITHUB_REF#refs/tags/v}\")"
+          echo "Android: implementation(\"com.github.AntonioNoguera:kmp-spike:${GITHUB_REF#refs/tags/v}\")"
