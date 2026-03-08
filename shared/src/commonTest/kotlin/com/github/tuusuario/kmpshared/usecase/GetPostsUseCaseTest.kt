@@ -6,7 +6,7 @@ import com.github.tuusuario.kmpshared.domain.usecase.GetPostsUseCase
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertFailsWith
 
 class GetPostsUseCaseTest {
 
@@ -14,37 +14,35 @@ class GetPostsUseCaseTest {
     private val useCase = GetPostsUseCase(fakeRepository)
 
     @Test
-    fun `invoke returns success with posts when repository succeeds`() = runTest {
+    fun `invoke returns posts when repository succeeds`() = runTest {
         val expectedPosts = listOf(
             Post(id = 1, userId = 1, title = "Title 1", body = "Body 1"),
             Post(id = 2, userId = 1, title = "Title 2", body = "Body 2")
         )
-        fakeRepository.postsToReturn = Result.success(expectedPosts)
+        fakeRepository.postsToReturn = expectedPosts
 
         val result = useCase()
 
-        assertTrue(result.isSuccess)
-        assertEquals(expectedPosts, result.getOrNull())
+        assertEquals(expectedPosts, result)
     }
 
     @Test
-    fun `invoke returns success with empty list when no posts`() = runTest {
-        fakeRepository.postsToReturn = Result.success(emptyList())
+    fun `invoke returns empty list when no posts`() = runTest {
+        fakeRepository.postsToReturn = emptyList()
 
         val result = useCase()
 
-        assertTrue(result.isSuccess)
-        assertEquals(emptyList(), result.getOrNull())
+        assertEquals(emptyList(), result)
     }
 
     @Test
-    fun `invoke returns failure when repository fails`() = runTest {
-        val expectedException = Exception("Network error")
-        fakeRepository.postsToReturn = Result.failure(expectedException)
+    fun `invoke throws exception when repository fails`() = runTest {
+        fakeRepository.errorToThrow = Exception("Network error")
 
-        val result = useCase()
+        val exception = assertFailsWith<Exception> {
+            useCase()
+        }
 
-        assertTrue(result.isFailure)
-        assertEquals("Network error", result.exceptionOrNull()?.message)
+        assertEquals("Network error", exception.message)
     }
 }

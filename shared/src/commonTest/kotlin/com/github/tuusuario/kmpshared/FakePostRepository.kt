@@ -5,10 +5,17 @@ import com.github.tuusuario.kmpshared.domain.repository.PostRepository
 
 class FakePostRepository : PostRepository {
 
-    var postsToReturn: Result<List<Post>> = Result.success(emptyList())
-    var postToReturn: Result<Post> = Result.failure(Exception("Not found"))
+    var postsToReturn: List<Post> = emptyList()
+    var postToReturn: Post? = null
+    var errorToThrow: Exception? = null
 
-    override suspend fun getPosts(): Result<List<Post>> = postsToReturn
+    override suspend fun getPosts(): List<Post> {
+        errorToThrow?.let { throw it }
+        return postsToReturn
+    }
 
-    override suspend fun getPostById(id: Int): Result<Post> = postToReturn
+    override suspend fun getPostById(id: Int): Post {
+        errorToThrow?.let { throw it }
+        return postToReturn ?: throw Exception("Post not found")
+    }
 }

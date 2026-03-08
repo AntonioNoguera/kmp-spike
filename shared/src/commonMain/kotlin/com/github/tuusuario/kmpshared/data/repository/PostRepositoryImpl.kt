@@ -8,15 +8,11 @@ internal class PostRepositoryImpl(
     private val api: PostApi
 ) : PostRepository {
 
-    override suspend fun getPosts(): Result<List<Post>> {
-        return runCatching {
-            api.getPosts().map { it.toDomain() }
-        }
+    override suspend fun getPosts(): List<Post> {
+        return api.getPosts().map { it.toDomain() }
     }
 
-    override suspend fun getPostById(id: Int): Result<Post> {
-        return runCatching {
-            api.getPostById(id).toDomain()
-        }
+    override suspend fun getPostById(id: Int): Post {
+        return api.getPostById(id).toDomain()
     }
 }
