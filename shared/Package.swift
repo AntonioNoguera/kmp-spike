@@ -15,8 +15,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "KMPShared",
-            url: "https://github.com/AntonioNoguera/kmp-spike/releases/download/v1.0.4/KMPShared.xcframework.zip",
-            checksum: "ce22c4be751bd12a928ff19fedfb26ecc1522d5c1d15b15f7b1138e8ac5c3440"
+            url: "https://github.com/AntonioNoguera/kmp-spike/releases/download/v1.0.5/KMPShared.xcframework.zip",
+            checksum: "f83c8e9c78a6a4cef35d0e3cd6ce8fa06729f913bff308d38933a43e5f44bd08"
         ),
     ]
 )
