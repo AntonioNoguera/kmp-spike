@@ -23,7 +23,7 @@ class GetPostsUseCaseTest {
 
         val result = useCase()
 
-        assertEquals(expectedPosts, result)
+        assertEquals(expectedPosts, result.toList())
     }
 
     @Test
@@ -32,7 +32,7 @@ class GetPostsUseCaseTest {
 
         val result = useCase()
 
-        assertEquals(emptyList(), result)
+        assertEquals(emptyList(), result.toList())
     }
 
     @Test
