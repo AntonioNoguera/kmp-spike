@@ -22,3 +22,6 @@ local.properties
 # XCFramework builds (generated)
 shared/build/
 shared/.build/
+
+# SPM build artifacts
+.build/

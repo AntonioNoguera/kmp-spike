@@ -125,11 +125,16 @@ jobs:
           echo "=== UPDATING FOR TAG: $TAG ==="
           echo "New checksum: ${{ steps.checksum.outputs.checksum }}"
 
-          # Update URL
-          sed -i '' "s|url: \".*${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|url: \"https://github.com/${{ github.repository }}/releases/download/$TAG/${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|" shared/Package.swift
+          # Update BOTH Package.swift files (root and shared)
+          for PACKAGE_FILE in Package.swift shared/Package.swift; do
+            echo "Updating $PACKAGE_FILE"
 
-          # Update checksum
-          sed -i '' "s|checksum: \".*\"|checksum: \"${{ steps.checksum.outputs.checksum }}\"|" shared/Package.swift
+            # Update URL
+            sed -i '' "s|url: \".*${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|url: \"https://github.com/${{ github.repository }}/releases/download/$TAG/${{ env.XCFRAMEWORK_NAME }}.xcframework.zip\"|" "$PACKAGE_FILE"
+
+            # Update checksum
+            sed -i '' "s|checksum: \".*\"|checksum: \"${{ steps.checksum.outputs.checksum }}\"|" "$PACKAGE_FILE"
+          done
 
       - name: "[Package.swift] Show updated content"
         run: |
@@ -142,9 +147,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git diff shared/Package.swift
+          git diff Package.swift shared/Package.swift
 
-          git add shared/Package.swift
+          git add Package.swift shared/Package.swift
           git commit -m "Update Package.swift for release ${GITHUB_REF#refs/tags/}" || echo "WARN: No changes to commit"
           git push origin HEAD:main || echo "WARN: Could not push to main (maybe protected branch?)"
 

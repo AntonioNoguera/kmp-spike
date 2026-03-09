@@ -4,6 +4,7 @@ ktor = "3.0.3"
 coroutines = "1.9.0"
 serialization = "1.7.3"
 agp = "8.2.2"
+skie = "0.10.10"
 
 [libraries]
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -19,3 +20,4 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+skie = { id = "co.touchlab.skie", version.ref = "skie" }
