@@ -141,8 +141,9 @@ jobs:
           echo "=== UPDATED PACKAGE.SWIFT ==="
           cat shared/Package.swift
 
-      - name: "[Package.swift] Commit changes"
+      - name: "[Package.swift] Commit and move tag"
         run: |
+          TAG=${GITHUB_REF#refs/tags/}
           echo "=== COMMITTING PACKAGE.SWIFT ==="
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -150,8 +151,12 @@ jobs:
           git diff Package.swift shared/Package.swift
 
           git add Package.swift shared/Package.swift
-          git commit -m "Update Package.swift for release ${GITHUB_REF#refs/tags/}" || echo "WARN: No changes to commit"
+          git commit -m "Update Package.swift for release $TAG" || echo "WARN: No changes to commit"
           git push origin HEAD:main || echo "WARN: Could not push to main (maybe protected branch?)"
+
+          echo "=== MOVING TAG TO INCLUDE PACKAGE.SWIFT UPDATE ==="
+          git tag -f "$TAG"
+          git push origin "$TAG" --force
 
       # ========================================
       # PUBLISH MAVEN
