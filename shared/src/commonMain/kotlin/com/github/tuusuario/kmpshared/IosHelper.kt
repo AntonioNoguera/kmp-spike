@@ -13,7 +13,7 @@ class IosSharedModule {
     private val scope = MainScope()
 
     fun getPosts(
-        onSuccess: (Array<Post>) -> Unit,
+        onSuccess: (List<Post>) -> Unit,
         onError: (String) -> Unit
     ) {
         scope.launch {
